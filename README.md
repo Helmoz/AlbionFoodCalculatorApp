@@ -1,1 +1,1 @@
-# AlbionFoodCalculatorApp
+# albion-food-calculator-api

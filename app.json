@@ -1,0 +1,15 @@
+{
+  "name": "AlbionFood",
+  "description": "AlbionFood",
+  "repository": "https://github.com/Helmoz/albion-food-calculator-api",
+  "keywords": ["aspnet", "core"],
+  "stack": "heroku-18",
+  "buildpacks": [
+    {
+      "url": "https://github.com/heroku/heroku-buildpack-nodejs"
+    },
+    {
+      "url": "https://github.com/jincod/dotnetcore-buildpack"
+    }
+  ]
+}

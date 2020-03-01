@@ -2,16 +2,20 @@ using AlbionFoodCalculator.Database;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
-using Microsoft.AspNetCore.SpaServices.Extensions;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.EntityFrameworkCore;
 using Newtonsoft.Json;
-using VueCliMiddleware;
 using AlbionFoodCalculator.Services;
 using Microsoft.AspNetCore.HttpOverrides;
-using Microsoft.AspNetCore.SpaServices;
 using System;
+using GraphQL.Server;
+using AlbionFoodCalculator.GQL.GraphQLSchema;
+using GraphQL;
+using Microsoft.AspNetCore.Server.Kestrel.Core;
+using AlbionFoodCalculator.GQL.Types;
+using AlbionFoodCalculator.GraphQL.Types;
+using GraphQL.Types;
 
 namespace AlbionFoodCalculator.Web
 {
@@ -37,16 +41,38 @@ namespace AlbionFoodCalculator.Web
                         .AllowAnyHeader());
                 });
 
+            services.Configure<KestrelServerOptions>(options =>
+            {
+                options.AllowSynchronousIO = true;
+            });
+
+            services.Configure<IISServerOptions>(options =>
+            {
+                options.AllowSynchronousIO = true;
+            });
+
             services.Configure<ForwardedHeadersOptions>(options =>
             {
-                options.ForwardedHeaders = ForwardedHeaders.XForwardedFor |
-                                           ForwardedHeaders.XForwardedProto;
+                options.ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto;
                 options.KnownNetworks.Clear();
                 options.KnownProxies.Clear();
             });
+
             services.AddMemoryCache();
-            services.AddDbContext<ApplicationDbContext>(options => options.UseLazyLoadingProxies().UseNpgsql(Configuration.GetConnectionString("DefaultConnection")));
+            services.AddDbContext<ApplicationDbContext>(options => options.UseLazyLoadingProxies()
+                                                                          .UseNpgsql(Configuration.GetConnectionString("DefaultConnection")));
             services.AddScoped<FoodItemPriceService>();
+
+            services.AddScoped<FoodItemType>();
+            services.AddScoped<HistoryType>();
+            services.AddScoped<FoodItemResourceType>();
+
+            services.AddScoped<ULongGraphType>();
+            services.AddScoped<DecimalGraphType>();
+            services.AddScoped<DateTimeGraphType>();
+            services.AddScoped<IDependencyResolver>(s => new FuncDependencyResolver(s.GetRequiredService));
+            services.AddScoped<AppSchema>();
+            services.AddGraphQL(o => { o.ExposeExceptions = true; }).AddGraphTypes(ServiceLifetime.Scoped);
         }
 
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
@@ -57,13 +83,9 @@ namespace AlbionFoodCalculator.Web
             {
                 app.UseDeveloperExceptionPage();
 
-                using (var scope = app.ApplicationServices.GetService<IServiceScopeFactory>().CreateScope())
-                {
-                    using (var context = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>())
-                    {
-                        context.Database.Migrate();
-                    }
-                }
+                using var scope = app.ApplicationServices.GetService<IServiceScopeFactory>().CreateScope();
+                using var context = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+                context.Database.Migrate();
             }
 
             if (!string.IsNullOrEmpty(Environment.GetEnvironmentVariable("DYNO")))
@@ -71,6 +93,8 @@ namespace AlbionFoodCalculator.Web
                 Console.WriteLine("Use https redirection");
                 app.UseHttpsRedirection();
             }
+
+            app.UseGraphQL<AppSchema>();
 
             app.UseRouting();
             app.UseDefaultFiles();
@@ -80,6 +104,16 @@ namespace AlbionFoodCalculator.Web
             {
                 endpoints.MapDefaultControllerRoute();
             });
+
+            if (env.IsDevelopment())
+            {
+                app.UseSpa(spa =>
+                {
+                    spa.Options.SourcePath = "ClientApp";
+
+                    spa.UseProxyToSpaDevelopmentServer($"http://localhost:8080");
+                });
+            }
         }
     }
 }

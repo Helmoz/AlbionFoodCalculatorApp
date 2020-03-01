@@ -1,0 +1,10 @@
+query FoodItem($name: String!, $city: String!) {
+  foodItem(name: $name, city: $city) {
+    name
+    craftingFocus
+    maximalBuyPrice
+    maximalBuyPriceDate
+    minimalSellPrice
+    minimalSellPriceDate
+  }
+}

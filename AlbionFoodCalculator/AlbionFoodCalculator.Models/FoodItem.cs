@@ -20,8 +20,18 @@ namespace AlbionFoodCalculator.Models
             {
                 Name = foodItem.Name,
                 CraftingFocus = foodItem.CraftingFocus,
-                Resourses = foodItem.Resourses.Select(x => new FoodItemResourceDto() { Count = x.Count, Resource = new ResourceDto() { Name = x.Resource.Name } }).ToList()
-            };
+                Resourses = foodItem.Resourses
+                .Select(x => new FoodItemResourceDto()
+                {
+                    Count = x.Count,
+                    Name = x.Resource.Name,
+                    Resource = new ResourceDto()
+                    {
+                        Name = x.Resource.Name
+                    }
+                })
+                .ToList()
+            };  
 
         public int CraftingFocus { get; set; }
 
@@ -41,11 +51,13 @@ namespace AlbionFoodCalculator.Models
 
         [JsonProperty("buy_price_max_date")]
         public DateTime MaximalBuyPriceDate { get; set; }
+        
+        public int Income => MinimalSellPrice * 10;
 
-        public History History { get; set; }
+        public int Cost => Resourses.Sum(x => x.Count * x.Resource.Price);
+
+        public int Profit => Income - Cost;
 
         public new List<FoodItemResourceDto> Resourses { get; set; }
-
-        public string IconUrl => $"https://gameinfo.albiononline.com/api/gameinfo/items/{Name}";
     }
 }

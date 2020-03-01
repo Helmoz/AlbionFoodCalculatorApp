@@ -1,0 +1,7 @@
+query History($name: String!, $city: String!) {
+  history(name: $name, city: $city) {
+    itemCount
+    pricesAverage
+    timestamps
+  }
+}

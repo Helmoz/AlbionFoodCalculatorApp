@@ -9,7 +9,9 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "AlbionFoodCalculator.Databa
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "AlbionFoodCalculator.Models", "AlbionFoodCalculator.Models\AlbionFoodCalculator.Models.csproj", "{2181D8F3-9F42-45BF-940A-A571BE5F6E78}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AlbionFoodCalculator.Services", "AlbionFoodCalculator.Services\AlbionFoodCalculator.Services.csproj", "{07D1F6E1-5C9E-458B-A076-E66315894D32}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "AlbionFoodCalculator.Services", "AlbionFoodCalculator.Services\AlbionFoodCalculator.Services.csproj", "{07D1F6E1-5C9E-458B-A076-E66315894D32}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "AlbionFoodCalculator.GraphQL", "AlbionFoodCalculator.GraphQL\AlbionFoodCalculator.GraphQL.csproj", "{C9CFD74F-E652-4F1E-80D0-5282F7A3BA01}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -33,6 +35,10 @@ Global
 		{07D1F6E1-5C9E-458B-A076-E66315894D32}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{07D1F6E1-5C9E-458B-A076-E66315894D32}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{07D1F6E1-5C9E-458B-A076-E66315894D32}.Release|Any CPU.Build.0 = Release|Any CPU
+		{C9CFD74F-E652-4F1E-80D0-5282F7A3BA01}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C9CFD74F-E652-4F1E-80D0-5282F7A3BA01}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C9CFD74F-E652-4F1E-80D0-5282F7A3BA01}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C9CFD74F-E652-4F1E-80D0-5282F7A3BA01}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

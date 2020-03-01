@@ -1,0 +1,7 @@
+query Resources($name: String!, $city: String!) {
+  resources(name: $name, city: $city) {
+    count
+    price
+    name
+  }
+}

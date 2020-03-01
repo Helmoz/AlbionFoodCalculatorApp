@@ -1,62 +1,66 @@
 const path = require('path')
 
 function extendWebpackAliases(cfg) {
-	cfg.resolve.alias['~'] = __dirname
-	cfg.resolve.alias['@'] = path.resolve(__dirname, 'src')
+  cfg.resolve.alias['~'] = __dirname
+  cfg.resolve.alias['@'] = path.resolve(__dirname, 'src')
 }
 
 module.exports = function(ctx) {
-	return {
-		boot: ['axios', 'composition-api', 'moment'],
+  return {
+    boot: ['composition-api', 'moment'],
 
-		css: ['app.sass'],
+    css: ['app.sass'],
 
-		extras: ['roboto-font', 'material-icons'],
+    extras: ['roboto-font', 'material-icons'],
 
-		framework: {
-			iconSet: 'material-icons',
-			lang: 'en-us',
-			all: 'auto',
+    framework: {
+      iconSet: 'material-icons',
+      lang: 'en-us',
+      all: 'auto',
 
-			components: [],
-			directives: [],
+      components: [],
+      directives: [],
 
-			plugins: ['Loading']
-		},
+      plugins: ['Loading']
+    },
 
-		supportIE: false,
+    supportIE: false,
 
-		build: {
-			scopeHoisting: true,
-			vueRouterMode: 'history',
-			showProgress: true,
-			gzip: false,
-			analyze: false,
+    build: {
+      scopeHoisting: true,
+      vueRouterMode: 'history',
+      showProgress: true,
+      gzip: false,
+      analyze: false,
 
-			extendWebpack(cfg) {
-				extendWebpackAliases(cfg),
-					cfg.module.rules.push({
-						enforce: 'pre',
-						test: /\.(js|vue)$/,
-						loader: 'eslint-loader',
-						exclude: /node_modules/,
-						options: {
-							formatter: require('eslint').CLIEngine.getFormatter('stylish')
-						}
-					})
-			}
-		},
+      extendWebpack(cfg) {
+        extendWebpackAliases(cfg),
+          cfg.module.rules.push({
+            enforce: 'pre',
+            test: /\.(js|vue)$/,
+            loader: 'eslint-loader',
+            exclude: /node_modules/,
+            options: {
+              formatter: require('eslint').CLIEngine.getFormatter('stylish')
+            }
+          }),
+          cfg.module.rules.push({
+            test: /\.(graphql|gql)$/,
+            loader: 'graphql-tag/loader'
+          })
+      }
+    },
 
-		devServer: {
-			https: false,
-			port: 8080,
-			open: true
-		},
+    devServer: {
+      https: false,
+      port: 8080,
+      open: true
+    },
 
-		animations: [],
+    animations: [],
 
-		ssr: {
-			pwa: false
-		}
-	}
+    ssr: {
+      pwa: false
+    }
+  }
 }

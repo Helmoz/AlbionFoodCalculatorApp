@@ -1,6 +1,5 @@
 export default function() {
-	return {
-		selectedfoodItem: '',
-		foodItem: null
-	}
+  return {
+    selectedfoodItem: ''
+  }
 }

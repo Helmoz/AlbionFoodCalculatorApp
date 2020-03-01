@@ -41,13 +41,17 @@
       <Source Include="$(SpaRoot)\dist\spa\**" />
     </ItemGroup>
     <Message Importance="high" Text="Copy files" />
-    <Copy SourceFiles="@(Source)"
-          DestinationFiles="$(PublishDir)\wwwroot\%(RecursiveDir)%(Filename)%(Extension)"
-          SkipUnchangedFiles="true"
-          OverwriteReadOnlyFiles="true"
-          Retries="3"
-          RetryDelayMilliseconds="300" />
+    <Copy SourceFiles="@(Source)" DestinationFiles="$(PublishDir)\wwwroot\%(RecursiveDir)%(Filename)%(Extension)" SkipUnchangedFiles="true" OverwriteReadOnlyFiles="true" Retries="3" RetryDelayMilliseconds="300" />
     <Message Importance="high" Text="Copied" />
+  </Target>
+
+  <Target Name="Copy images to wwwroot" AfterTargets="PublishRunWebpack">
+    <ItemGroup>
+      <SourceImg Include="$(SpaRoot)\src\assets\foodItems\**" />
+    </ItemGroup>
+    <Message Importance="high" Text="Copy images" />
+    <Copy SourceFiles="@(SourceImg)" DestinationFiles="$(PublishDir)\wwwroot\img\%(RecursiveDir)%(Filename)%(Extension)" SkipUnchangedFiles="true" OverwriteReadOnlyFiles="true" Retries="3" RetryDelayMilliseconds="300" />
+    <Message Importance="high" Text="Images copied" />
   </Target>
   
   <PropertyGroup>
@@ -71,6 +75,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\AlbionFoodCalculator.Database\AlbionFoodCalculator.Database.csproj" />
+    <ProjectReference Include="..\AlbionFoodCalculator.GraphQL\AlbionFoodCalculator.GraphQL.csproj" />
     <ProjectReference Include="..\AlbionFoodCalculator.Models\AlbionFoodCalculator.Models.csproj" />
     <ProjectReference Include="..\AlbionFoodCalculator.Services\AlbionFoodCalculator.Services.csproj" />
   </ItemGroup>

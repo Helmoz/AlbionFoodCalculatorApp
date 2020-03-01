@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Net.Http;
 using System.Threading.Tasks;
@@ -37,18 +38,28 @@ namespace AlbionFoodCalculator.Services
             return JsonConvert.DeserializeObject<T[]>(json).FirstOrDefault();
         }
 
+        private TOut Deserialize<TIn, TOut>(string json, Func<TIn, TOut> selector)
+        {
+            return JsonConvert.DeserializeObject<TIn[]>(json).Select(selector).FirstOrDefault();
+        }
+
         private async Task<FoodItemResponse> GetPrices(string foodItemName, string city)
         {
             var url = $"https://www.albion-online-data.com/api/v2/stats/prices/{foodItemName}?locations={city}&qualities=1";
             return new FoodItemResponse() { Json = await GetJsonResponse(url), Name = foodItemName };
         }        
 
-        private async Task<History> GetHistory(string name, string city)
+        public async Task<HistoryDto> GetHistory(string name, string city)
         {
-            var date = DateTime.Now.AddDays(-14).ToString("MM-dd-yyyy");
-            var url = $"https://www.albion-online-data.com/api/v2/stats/charts/{name}?locations={city}&date={date}&time-scale=24";
 
-            return Deserialize<History>(await GetJsonResponse(url));
+            if (!Chache.TryGetValue($"{name}_{city}_history", out HistoryDto history))
+            {
+                var date = DateTime.Now.AddDays(-14).ToString("MM-dd-yyyy");
+                var url = $"https://www.albion-online-data.com/api/v2/stats/charts/{name}?locations={city}&date={date}&time-scale=24";
+                history = Deserialize(await GetJsonResponse(url), History.ProjectionExpression);
+                Chache.Set($"{name}_{city}_history", history, new MemoryCacheEntryOptions().SetAbsoluteExpiration(TimeSpan.FromMinutes(5)));
+            }
+            return history;
         }
 
         private string GetResponseByName(FoodItemResponse[] responses, string name)
@@ -56,31 +67,44 @@ namespace AlbionFoodCalculator.Services
             return responses.FirstOrDefault(x => x.Name == name).Json;
         }
 
-        public async Task<FoodItemDto> GetFoodItemInfo(string name, string city)
+        public async Task<List<FoodItemResourceDto>> GetResources(string name, string city)
         {
-            if (!Chache.TryGetValue($"{name}_{city}", out FoodItemDto item))
+            if (!Chache.TryGetValue($"{name}_{city}_resources", out List<FoodItemResourceDto> resources))
             {
-                item = await ApplicationDbContext.FoodItems.Select(FoodItem.ProjectionExpression).FirstOrDefaultAsync(x => x.Name == name);
-                item.History = await GetHistory(name, city);
+                resources = (await ApplicationDbContext.FoodItems
+                    .Select(FoodItem.ProjectionExpression)
+                    .FirstOrDefaultAsync(x => x.Name == name))
+                    .Resourses;
 
-                var tasks = item.Resourses.Select(x => GetPrices(x.Resource.Name, city)).ToList();
-                tasks.Add(GetPrices(name, city));
+                var tasks = resources.Select(x => GetPrices(x.Resource.Name, city)).ToList();
                 var responses = await Task.WhenAll(tasks);
 
-                var foodItem = Deserialize<FoodItemDto>(GetResponseByName(responses, name));
+                foreach (var resourse in resources)
+                {
+                    resourse.Price = Deserialize<FoodItemDto, int>(GetResponseByName(responses, resourse.Name), x => x.MinimalSellPrice);
+                }
+                Chache.Set($"{name}_{city}_resources", resources, new MemoryCacheEntryOptions().SetAbsoluteExpiration(TimeSpan.FromMinutes(5)));
+            }
+
+            return resources;
+
+        }
+
+        public async Task<FoodItemDto> GetFoodItemInfo(string name, string city)
+        {
+            if (!Chache.TryGetValue($"{name}_{city}_foodItem", out FoodItemDto item))
+            {
+                item = await ApplicationDbContext.FoodItems.Select(FoodItem.ProjectionExpression).FirstOrDefaultAsync(x => x.Name == name);
+                
+                var foodItem = Deserialize<FoodItemDto>((await GetPrices(name, city)).Json);
                 item.MinimalSellPrice = foodItem.MinimalSellPrice;
                 item.MinimalSellPriceDate = foodItem.MinimalSellPriceDate.ToLocalTime();
                 item.MaximalBuyPrice = foodItem.MaximalBuyPrice;
                 item.MaximalBuyPriceDate = foodItem.MaximalBuyPriceDate.ToLocalTime();
-
-                foreach (var resourse in item.Resourses)
-                {
-                    resourse.Resource.Price = Deserialize<FoodItemDto>(GetResponseByName(responses, resourse.Resource.Name)).MinimalSellPrice;
-                }
-
+                
                 if (item != null)
                 {
-                    Chache.Set($"{name}_{city}", item, new MemoryCacheEntryOptions().SetAbsoluteExpiration(TimeSpan.FromMinutes(5)));
+                    Chache.Set($"{name}_{city}_foodItem", item, new MemoryCacheEntryOptions().SetAbsoluteExpiration(TimeSpan.FromMinutes(5)));
                 }
             }
             return item;
